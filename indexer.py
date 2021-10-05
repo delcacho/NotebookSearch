@@ -42,7 +42,7 @@ def renameIndex(es,indexName,alias):
            { "remove": { "index": srcIndex, "alias": alias  }} 
         ]
       })
-      deleteIndex(srcIndex)
+      deleteIndex(es,srcIndex)
    else:
       es.indices.put_alias(index=indexName,name=alias)
 
