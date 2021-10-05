@@ -12,8 +12,9 @@ import tqdm
 import sys
 import traceback
 import zipfile
+import time
 
-indexName = "notebook-index"
+indexName = "tmp-index-"+str(time.time)
 names, hosts, tokens = parseDatabricksCfg()
 
 client = Elasticsearch("http://localhost:9200")
@@ -31,6 +32,19 @@ def indexDocument(es,indexName,doc):
 
 def deleteIndex(es, indexName):
    es.indices.delete(index=indexName, ignore=[400, 404])
+
+def renameIndex(es,indexName,alias)
+   if client.indices.exists_alias(alias):
+      srcIndex = list(client.indices.get_alias(alias).keys())[0]
+      es.indices.update_aliases({
+        "actions": [
+           { "add":    { "index": indexName, "alias": alias }}, 
+           { "remove": { "index": srcIndex, "alias": alias  }} 
+        ]
+      })
+      deleteIndex(srcIndex)
+   else:
+      es.indices.put_alias(index=indexName,name=alias)
 
 def createIndex(es, indexName):
    mapping = {
@@ -79,6 +93,7 @@ def hashRecord(i,row):
 
 deleteIndex(client,indexName)
 createIndex(client,indexName)
+renameIndex(client,indexName,"notebookIndex")
 
 df = pd.read_csv("data/files.csv")
 df.sort_values('objectid')
