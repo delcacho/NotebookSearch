@@ -14,18 +14,16 @@ import traceback
 import zipfile
 import time
 
-indexName = "tmp-index-"+str(time.time)
+indexName = "tmp-index-"+str(round(time.time()))
 names, hosts, tokens = parseDatabricksCfg()
 
-client = Elasticsearch("http://localhost:9200")
+client = Elasticsearch("http://localhost:443")
 
 def buildUrl(envname,objectid,location,envnames,hosts):
   for i in range(len(envnames)):
     if envnames[i] == envname:
        return hosts[i] + "#notebook/"+str(objectid)
-    else: # for git repos
-       return envname + "/" + location
-  return ""
+  return envname + "/tree/main/" + location
 
 def indexDocument(es,indexName,doc):
    res = es.index(index=indexName, body=doc)
@@ -33,7 +31,7 @@ def indexDocument(es,indexName,doc):
 def deleteIndex(es, indexName):
    es.indices.delete(index=indexName, ignore=[400, 404])
 
-def renameIndex(es,indexName,alias)
+def renameIndex(es,indexName,alias):
    if client.indices.exists_alias(alias):
       srcIndex = list(client.indices.get_alias(alias).keys())[0]
       es.indices.update_aliases({
@@ -42,14 +40,14 @@ def renameIndex(es,indexName,alias)
            { "remove": { "index": srcIndex, "alias": alias  }} 
         ]
       })
-      deleteIndex(srcIndex)
+      deleteIndex(es,srcIndex)
    else:
       es.indices.put_alias(index=indexName,name=alias)
 
 def createIndex(es, indexName):
    mapping = {
        "mappings": {
-           "dynamic": "runtime",
+   #        "dynamic": "runtime",
            "properties": { 
                "title": { "type": "text", "analyzer": "standard" },
                "body": { "type": "text"},
@@ -58,6 +56,8 @@ def createIndex(es, indexName):
                "tags": {"type": "keyword"},
                "url": {"type": "keyword"},
                "envname": { "type": "keyword" },
+               "vertical": { "type": "keyword" },
+               "step": { "type": "keyword" },
                "timestamp": {"type": "date"}
            }
        }
@@ -65,6 +65,7 @@ def createIndex(es, indexName):
    print(es.indices.create(index=indexName,body=mapping))
 
 def parseDocument(i,row):
+  global df
   try:
      location = row["location"]
      if location.startswith("/Users/"):
@@ -78,6 +79,9 @@ def parseDocument(i,row):
      doc["timestamp"] = datetime.datetime.now()
      doc["_index"] = indexName
      doc["url"] = buildUrl(row["envname"],row["objectid"],row["location"],names,hosts)
+     if "canonicalUrl" in doc:
+        doc["url"] = doc["canonicalUrl"]
+        df.at[i,'objectid'] = 0
      return doc
   except:
      return None
@@ -93,13 +97,17 @@ def hashRecord(i,row):
 
 deleteIndex(client,indexName)
 createIndex(client,indexName)
-renameIndex(client,indexName,"notebookIndex")
 
 df = pd.read_csv("data/files.csv")
 df.sort_values('objectid')
 
 print("Going to Parse DBCs!")
 docstore = pqdm(df.iterrows(), parseDocument, n_jobs=2, argument_type='args')
+
+reordered = df["objectid"].sort_values().index
+df.sort_values('objectid')
+docstore = [docstore[i] for i in reordered]
+
 print("Going to MinHash!")
 lsh = MinHashLSH(threshold=0.9, num_perm=256)
 
@@ -118,3 +126,5 @@ for i,row in tqdm.tqdm(df.iterrows()):
            docs = []
 if len(docs) > 0:
   res = helpers.bulk(client, docs, chunk_size=1000, request_timeout=200)
+
+renameIndex(client,indexName,"notebookIndex")

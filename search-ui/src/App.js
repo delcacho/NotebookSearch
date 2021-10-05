@@ -47,8 +47,8 @@ class App extends Component {
 <div className="info"><strong>Note:</strong> Advanced search operators are supported, for example:
  <pre>"scrambled eggs" +(bacon | fries) -steak</pre></div>
 <ReactiveBase
-				app="notebook-index"
- url="http://ec2-18-222-152-27.us-east-2.compute.amazonaws.com:443">
+				app="notebookIndex"
+ url="http://ec2-3-16-26-231.us-east-2.compute.amazonaws.com:443">
 <div className="filters-container">
 
 				<CategorySearch
@@ -75,7 +75,7 @@ class App extends Component {
 <SelectedFilters showClearAll={true} clearAllLabel="Clear filters"/>
 <MultiList componentId="language" dataField="language" title="Programming Language" showSearch={false}/>
 <MultiList componentId="vertical" dataField="vertical" title="Industry Vertical" showSearch={false}/>
-<MultiList componentId="step" dataField="step" title="Processing stage" showSearch={false}/>
+<MultiList componentId="step" dataField="step" title="Stage" showSearch={false}/>
 <MultiList componentId="tag" dataField="tags" title="Tags" queryFormat="and"/>
 </div>
 <div className="result-list-container">
@@ -87,7 +87,7 @@ class App extends Component {
     size={10}
     style={{align:"left"}}
     react={{
-        "and": ["search","tag","language"]
+        "and": ["search","tag","language","vertical","step"]
     }}
     renderItem={(res) => <div><img src={getImage(res.language)}/> <a href={res.url}>{res.title}</a> by <span style={{ color: 'darkgreen', marginLeft: 5 }}>{res.author} <span className="tagbox" style={{ color: 'gray', marginLeft: 5 }}>{res.language}</span> {res.tags.map(function(d, idx){
          return (<span className="tagbox" style={{ color: 'gray', marginLeft: 5 }} key={idx}>{d}</span>)
