@@ -7,7 +7,7 @@ import pandas as pd
 import tqdm
 
 # Instantiate a client instance
-es = Elasticsearch("http://localhost:9200")
+es = Elasticsearch("http://localhost:443")
 
 while True:
   token = input('Query> ').lower()
