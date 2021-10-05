@@ -18,10 +18,12 @@ names, hosts, tokens = parseDatabricksCfg()
 
 client = Elasticsearch("http://localhost:9200")
 
-def buildUrl(envname,objectid,envnames,hosts):
+def buildUrl(envname,objectid,location,envnames,hosts):
   for i in range(len(envnames)):
     if envnames[i] == envname:
        return hosts[i] + "#notebook/"+str(objectid)
+    else: # for git repos
+       return envname + "/" + location
   return ""
 
 def indexDocument(es,indexName,doc):
@@ -33,7 +35,8 @@ def deleteIndex(es, indexName):
 def createIndex(es, indexName):
    mapping = {
        "mappings": {
-           "properties": {
+           "dynamic": "runtime",
+           "properties": { 
                "title": { "type": "text", "analyzer": "standard" },
                "body": { "type": "text"},
                "language": { "type": "keyword" },
@@ -60,7 +63,7 @@ def parseDocument(i,row):
      doc["envname"] = row["envname"]
      doc["timestamp"] = datetime.datetime.now()
      doc["_index"] = indexName
-     doc["url"] = buildUrl(row["envname"],row["objectid"],names,hosts)
+     doc["url"] = buildUrl(row["envname"],row["objectid"],row["location"],names,hosts)
      return doc
   except:
      return None

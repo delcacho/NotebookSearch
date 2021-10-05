@@ -74,6 +74,8 @@ class App extends Component {
 					/>
 <SelectedFilters showClearAll={true} clearAllLabel="Clear filters"/>
 <MultiList componentId="language" dataField="language" title="Programming Language" showSearch={false}/>
+<MultiList componentId="vertical" dataField="vertical" title="Industry Vertical" showSearch={false}/>
+<MultiList componentId="step" dataField="step" title="Processing stage" showSearch={false}/>
 <MultiList componentId="tag" dataField="tags" title="Tags" queryFormat="and"/>
 </div>
 <div className="result-list-container">

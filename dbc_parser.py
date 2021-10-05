@@ -36,6 +36,21 @@ def getFilters(fname):
    automaton.make_automaton()
    return automaton
 
+def readMetadata(txt,doc):
+   offset = 0
+   pos = txt.find("<!--",offset)
+   while pos >= 0:
+     offset = txt.rfind("-->",pos)
+     comment = txt[pos+len("<-!--"):offset+1-len("-->")]
+     comment = comment.strip()
+     if comment.startswith("[metadata"):
+       bracketstart = comment.find("{")
+       bracketend = comment.rfind("}")
+       obj = json.loads(comment[bracketstart:bracketend+1])
+       for vals in obj["search_tags"].items():
+          doc[vals[0]] = vals[1]
+     pos = txt.find("<!--",offset)
+
 def parseDBC(dbc_file):
     txt = ''
     files = extractZip(dbc_file)
@@ -51,8 +66,12 @@ def parseDBC(dbc_file):
         txt += command["command"]+"\n"
     tags = findTags(getFilters("./filters.csv"),txt)
     doc = {"language": language, "title": name, "body": txt, "tags": tags}
+    readMetadata(txt,doc)
     return(doc)
 
 def extractZip(input_zip):
     input_zip=ZipFile(input_zip)
     return {name: input_zip.read(name) for name in input_zip.namelist()}
+
+if __name__ == "__main__":
+    print(parseDBC("quentin.dbc"))
