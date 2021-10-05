@@ -14,10 +14,10 @@ import traceback
 import zipfile
 import time
 
-indexName = "tmp-index-"+str(time.time)
+indexName = "tmp-index-"+str(round(time.time()))
 names, hosts, tokens = parseDatabricksCfg()
 
-client = Elasticsearch("http://localhost:9200")
+client = Elasticsearch("http://localhost:443")
 
 def buildUrl(envname,objectid,location,envnames,hosts):
   for i in range(len(envnames)):
@@ -33,7 +33,7 @@ def indexDocument(es,indexName,doc):
 def deleteIndex(es, indexName):
    es.indices.delete(index=indexName, ignore=[400, 404])
 
-def renameIndex(es,indexName,alias)
+def renameIndex(es,indexName,alias):
    if client.indices.exists_alias(alias):
       srcIndex = list(client.indices.get_alias(alias).keys())[0]
       es.indices.update_aliases({
