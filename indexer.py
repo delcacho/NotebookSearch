@@ -19,6 +19,14 @@ names, hosts, tokens = parseDatabricksCfg()
 
 client = Elasticsearch("http://localhost:443")
 
+def markCanonicalDocument(df,docstore,url):
+
+   for i,v in enumrate(docstore):
+      if doc["url"] == url:
+         df.loc[i,"objetcid"] = 0
+         return True
+   return False
+
 def buildUrl(envname,objectid,location,envnames,hosts):
   for i in range(len(envnames)):
     if envnames[i] == envname:
@@ -79,9 +87,6 @@ def parseDocument(i,row):
      doc["timestamp"] = datetime.datetime.now()
      doc["_index"] = indexName
      doc["url"] = buildUrl(row["envname"],row["objectid"],row["location"],names,hosts)
-     if "canonicalUrl" in doc:
-        doc["url"] = doc["canonicalUrl"]
-        df.at[i,'objectid'] = 0
      return doc
   except:
      return None
@@ -103,6 +108,12 @@ df.sort_values('objectid')
 
 print("Going to Parse DBCs!")
 docstore = pqdm(df.iterrows(), parseDocument, n_jobs=2, argument_type='args')
+for i,row in df.iterrows():
+  doc = docstore[i]
+  if "canonicalUrl" in doc:
+     if not markCanonicalDocument(df,docstore,doc["canonicalUrl"]):
+        df.loc[i,"objetcid"] = 0
+        docstore[i]["url"] = doc["canonicalUrl"]
 
 reordered = df["objectid"].sort_values().index
 df.sort_values('objectid')
