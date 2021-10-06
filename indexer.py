@@ -19,12 +19,12 @@ names, hosts, tokens = parseDatabricksCfg()
 
 client = Elasticsearch("http://localhost:443")
 
-def markCanonicalDocument(df,docstore,url):
+def markCanonicalDocument(df,docurls,url):
 
-   for i,v in enumrate(docstore):
-      if doc["url"] == url:
-         df.loc[i,"objetcid"] = 0
-         return True
+   if url in docurls:
+      i = docurls[url]
+      df.loc[i,"objetcid"] = 0
+      return True
    return False
 
 def buildUrl(envname,objectid,location,envnames,hosts):
@@ -108,10 +108,12 @@ df.sort_values('objectid')
 
 print("Going to Parse DBCs!")
 docstore = pqdm(df.iterrows(), parseDocument, n_jobs=2, argument_type='args')
+docurls = {doc["url"]:i for (i,doc) in enumerate(docstore)}
+
 for i,row in df.iterrows():
   doc = docstore[i]
   if "canonicalUrl" in doc:
-     if not markCanonicalDocument(df,docstore,doc["canonicalUrl"]):
+     if not markCanonicalDocument(df,docurls,doc["canonicalUrl"]):
         df.loc[i,"objetcid"] = 0
         docstore[i]["url"] = doc["canonicalUrl"]
 
