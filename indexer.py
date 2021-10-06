@@ -14,6 +14,7 @@ import traceback
 import zipfile
 import time
 
+debugEnabled = False
 indexName = "tmp-index-"+str(round(time.time()))
 names, hosts, tokens = parseDatabricksCfg()
 
@@ -101,6 +102,9 @@ deleteIndex(client,indexName)
 createIndex(client,indexName)
 
 df = pd.read_csv("data/files.csv")
+if debugEnabled:
+    df = df.tail(500)
+    df.reset_index(drop=True,inplace=True)
 df.sort_values('objectid')
 
 print("Going to Parse DBCs!")
@@ -110,7 +114,7 @@ docurls = {doc["url"]:i for (i,doc) in enumerate(docstore)}
 for i,row in df.iterrows():
   doc = docstore[i]
   if "canonicalUrl" in doc:
-     rowno = findCanonicalDocument(df,docurls,doc["canonicalUrl"],i):
+     rowno = findCanonicalDocument(df,docurls,doc["canonicalUrl"],i)
      df.loc[rowno,"objetcid"] = 0
      docstore[rowno]["url"] = doc["canonicalUrl"]
      if "canonicalAuthor" in doc:
