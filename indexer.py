@@ -5,6 +5,7 @@ from pqdm.threads import pqdm
 from nltk import ngrams
 import datetime
 from dbc_parser import parseDBC
+from ipynb_parser import parseIPYNB
 from config_parser import parseDatabricksCfg 
 import glob
 import pandas as pd
@@ -79,7 +80,12 @@ def parseDocument(i,row):
         user = user[0:user.find("/")]
      else:
         user = "Unknown"
-     doc = parseDBC(row["data"])
+     if row["data"].endswith(".dbc"):
+        doc = parseDBC(row["data"])
+     elif row["data"].endswith(".ipynb"):
+        doc = parseIPYNB(row["data"])
+     else:
+        raise NotImplementedError
      doc["author"] = user
      doc["envname"] = row["envname"]
      doc["timestamp"] = datetime.datetime.now()
@@ -132,9 +138,9 @@ print("Going to index!")
 docs = []
 for i,row in tqdm.tqdm(df.iterrows()):
   if minhashes[i] is not None:
-     lsh.insert(i, minhashes[i])
      result = lsh.query(minhashes[i])
-     if min(result) >= i:
+     lsh.insert(i, minhashes[i])
+     if len(result) == 0:
         if docstore[i] is not None:
            docs.append(docstore[i])
         if i%1000 == 0 and i > 0:

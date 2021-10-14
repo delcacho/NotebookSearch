@@ -1,5 +1,7 @@
 data
 search-ui/node_modules
 *.gz
+*.dbc
+*.ipynb
 __pycache__
 .DS_Store

@@ -11,6 +11,7 @@ bokeh,PACKAGE,Bokeh
 boto3,PACKAGE,Boto3
 boto3,PACKAGE,AWS
 bs4,PACKAGE,BeautifulSoup
+caffe,PACKAGE,Caffe
 caret,PACKAGE,caret
 catboost,PACKAGE,CatBoost
 chainer,PACKAGE,Chainer

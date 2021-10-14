@@ -21,23 +21,33 @@ def readMetadata(txt,doc):
           doc[vals[0]] = vals[1]
      pos = txt.find("<!--",offset)
 
-def parseDBC(dbc_file):
+def parseIPYNB(ipynb_file):
     txt = ''
-    files = extractZip(dbc_file)
-    for name,contents in files.items():
-      obj = json.loads(contents.decode("utf-8"))
-      language = obj["language"]
-      if language == "sql":
-        language = language.upper()
-      else:
-        language = language.capitalize()
-      name = obj["name"]
-      for command in obj["commands"]:
-        txt += command["command"]+"\n"
+    if ipynb_file.endswith(".zip"):
+       files = extractZip(ipynb_file)
+       ipynb_file = ipynb_file.replace(".ipynb.zip",".ipynb")
+       name,contents = list(files.items())[0]
+    else:
+       with open(ipynb_file,"r") as fp: 
+          contents = fp.read()
+    obj = json.loads(contents)
+    try:
+      language = obj["metadata"]["language_info"]["name"].lower()
+    except:
+      language = list(obj["metadata"].values())[0]["language"].lower()
+      pass
+    if language == "sql":
+      language = language.upper()
+    else:
+      language = language.capitalize()
+    name = ipynb_file[ipynb_file.rfind("/")+1:].replace(".ipynb","")
+    for command in obj["cells"]:
+      if command["cell_type"] == "code" or command["cell_type"] == "markdown":
+         txt += "".join(command["source"])+"\n"
     tags = findTags(getFilters("./filters.csv"),txt)
     doc = {"language": language, "title": name, "body": txt, "tags": tags}
     readMetadata(txt,doc)
     return(doc)
 
 if __name__ == "__main__":
-    print(parseDBC("quentin.dbc"))
+    print(parseIPYNB("demo.ipynb.zip"))

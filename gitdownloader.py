@@ -20,7 +20,7 @@ lines = list(set([line.strip() for line in lines]))
 def process(line):
    repo = line.strip()
    print("Processing",repo,"...")
-   output = out("svn ls -R {}.git | grep \.dbc".format(repo))
+   output = out("svn ls -R {}.git".format(repo))
    folder = "./data/git"+line[repo.rfind("/",0,repo.rfind("/")):]
    try:
      os.makedirs(folder)
@@ -28,9 +28,10 @@ def process(line):
      pass
    for outline in output.splitlines():
      outline = outline.strip()
-     objectid = outline.replace("trunk/","")
-     writer.writerow([repo,0,objectid,folder+outline[outline.rfind("/"):]])
-     out("svn export {}.git/{} {}".format(line,outline,folder))
+     if outline.endswith(".dbc") or outline.endswith(".ipynb"):
+        objectid = outline.replace("trunk/","")
+        writer.writerow([repo,0,objectid,folder+outline[outline.rfind("/"):]])
+        out("svn export {}.git/{} {}".format(line,outline,folder))
 try:
   os.mkdir("./data/git")
 except:

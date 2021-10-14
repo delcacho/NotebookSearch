@@ -19,14 +19,15 @@ writer.writerow(["envname","objectid","location","data"])
 outcsv.flush()
 executor = ThreadPoolExecutor(max_workers=5)
 
-def getFileName(remotePath,envname):
+def getFileName(remotePath,envname,format="dbc"):
    filename = remotePath[1+remotePath.rfind("/"):]
-   if os.path.isfile("./data/"+envname+"/"+filename+".dbc"):
+   format = "."+format
+   if os.path.isfile("./data/"+envname+"/"+filename+format):
       i = 1
-      while os.path.isfile("./data/"+name+"/"+filename+"_"+str(i)+".dbc"):
+      while os.path.isfile("./data/"+name+"/"+filename+"_"+str(i)+format):
          i += 1
       filename = filename+"_"+str(i)
-   filename = "./data/"+envname+"/"+filename+".dbc"
+   filename = "./data/"+envname+"/"+filename+format
    fp = open(filename,"w")
    fp.write("")
    fp.close()
@@ -71,11 +72,10 @@ def listWorkspace(remotePath,url,token,envname):
 
    if "objects" in result:
      for file in result["objects"]:
-      if ".dbc" in file["path"]:
-         print(file["path"])
       if file["object_type"] == "DIRECTORY":
         listWorkspace(file["path"],url,token,envname)
       if file["object_type"] == "NOTEBOOK":
+        print(file["path"])
         fileName = getFileName(file["path"],envname)
         executor.submit(downloadNotebook,wksp,file["path"],envname,fileName)
         #downloadNotebook(wksp,file["path"],envname,fileName)
@@ -83,6 +83,7 @@ def listWorkspace(remotePath,url,token,envname):
         outcsv.flush()
  except Exception as e:
   traceback.print_exc()
+  sys.exit(1)
   pass
 
 for i in range(len(hosts)):
