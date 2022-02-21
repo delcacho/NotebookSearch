@@ -5,6 +5,7 @@ import ahocorasick
 import numpy as np
 from memoization import cached
 from common_parser import usesPackage, findTags, getFilters, extractZip
+from datetime import datetime
 
 def readMetadata(txt,doc):
    offset = 0
@@ -24,6 +25,7 @@ def readMetadata(txt,doc):
 def parseDBC(dbc_file):
     txt = ''
     files = extractZip(dbc_file)
+    minTime = 9999999999999
     for name,contents in files.items():
       obj = json.loads(contents.decode("utf-8"))
       language = obj["language"]
@@ -34,8 +36,11 @@ def parseDBC(dbc_file):
       name = obj["name"]
       for command in obj["commands"]:
         txt += command["command"]+"\n"
+        if command["startTime"] < minTime and command["startTime"] > 0:
+           minTime = command["startTime"]
     tags = findTags(getFilters("./filters.csv"),txt)
-    doc = {"language": language, "title": name, "body": txt, "tags": tags}
+    minTime = datetime.fromtimestamp(minTime/1000.0)
+    doc = {"language": language, "title": name, "body": txt, "tags": tags, "lastRun": minTime}
     readMetadata(txt,doc)
     return(doc)
 

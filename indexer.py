@@ -19,7 +19,7 @@ debugEnabled = False
 indexName = "tmp-index-"+str(round(time.time()))
 names, hosts, tokens = parseDatabricksCfg()
 
-client = Elasticsearch("http://localhost:443")
+client = Elasticsearch("http://localhost:9200")
 
 def findCanonicalDocument(df,docurls,url,oldindex):
    if url in docurls:
@@ -65,7 +65,8 @@ def createIndex(es, indexName):
                "envname": { "type": "keyword" },
                "vertical": { "type": "keyword" },
                "step": { "type": "keyword" },
-               "timestamp": {"type": "date"}
+               "timestamp": {"type": "date"},
+               "lastRun": {"type": "date"}
            }
        }
    }
@@ -93,12 +94,12 @@ def parseDocument(i,row):
      doc["url"] = buildUrl(row["envname"],row["objectid"],row["location"],names,hosts)
      return doc
   except:
-     return None
+     return {}
      pass
 
 def hashRecord(i,row):
   global lsh, docstore
-  if docstore[i] is not None:
+  if bool(docstore[i]):
      minhash = MinHash(num_perm=256)
      for d in docstore[i]["body"].split():
         minhash.update("".join(d).encode('utf-8'))
@@ -115,7 +116,7 @@ df.sort_values('objectid')
 
 print("Going to Parse DBCs!")
 docstore = pqdm(df.iterrows(), parseDocument, n_jobs=2, argument_type='args')
-docurls = {doc["url"]:i for (i,doc) in enumerate(docstore)}
+docurls = {(doc["url"] if "url" in doc else ""):i for (i,doc) in enumerate(docstore)}
 
 for i,row in df.iterrows():
   doc = docstore[i]

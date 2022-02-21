@@ -1,7 +1,7 @@
 import './App.css';
 import React, { Component } from 'react';
 import { 
-	ReactiveBase, CategorySearch, SingleRange, ResultCard, ReactiveList, MultiList, SelectedFilters
+	ReactiveBase, CategorySearch, SingleRange, ResultCard, ReactiveList, MultiList, SelectedFilters, DateRange
 } from '@appbaseio/reactivesearch';
 import './style.css';
 import logo from './logosmall.png';
@@ -48,7 +48,7 @@ class App extends Component {
  <pre>"scrambled eggs" +(bacon | fries) -steak</pre></div>
 <ReactiveBase
 				app="notebookIndex"
- url="http://ec2-3-16-26-231.us-east-2.compute.amazonaws.com:443">
+ url="http://localhost:9200">
 <div className="filters-container">
 
 				<CategorySearch
@@ -76,6 +76,7 @@ class App extends Component {
 <MultiList componentId="language" dataField="language" title="Programming Language" showSearch={false}/>
 <MultiList componentId="vertical" dataField="vertical" title="Industry Vertical" showSearch={false}/>
 <MultiList componentId="step" dataField="step" title="Stage" showSearch={false}/>
+<DateRange componentId="lastRun" dataField="lastRun" title="Date last run"/>
 <MultiList componentId="tag" dataField="tags" title="Tags" queryFormat="and"/>
 </div>
 <div className="result-list-container">
@@ -87,7 +88,7 @@ class App extends Component {
     size={10}
     style={{align:"left"}}
     react={{
-        "and": ["search","tag","language","vertical","step"]
+        "and": ["search","tag","language","vertical","step","lastRun"]
     }}
     renderItem={(res) => <div><img src={getImage(res.language)}/> <a href={res.url}>{res.title}</a> by <span style={{ color: 'darkgreen', marginLeft: 5 }}>{res.author} <span className="tagbox" style={{ color: 'gray', marginLeft: 5 }}>{res.language}</span> {res.tags.map(function(d, idx){
          return (<span className="tagbox" style={{ color: 'gray', marginLeft: 5 }} key={idx}>{d}</span>)
